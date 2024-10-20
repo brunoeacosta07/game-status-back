@@ -1,11 +1,15 @@
 import sqlite3
+import logging
 from flask_cors import CORS
 from flask import Flask, request, jsonify
 
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 app = Flask(__name__)
 CORS(app)
 
 def init_db():
+    logger.info('>>>>>>>>>>> Initializando la base de datos')
     conn = sqlite3.connect('game.db')
     c = conn.cursor()
     c.execute('''CREATE TABLE IF NOT EXISTS game_info (
@@ -22,6 +26,7 @@ def init_db():
 
 @app.route('/game-info/<int:match_number>', methods=['GET'])
 def get_game_info(match_number):
+    logger.info(f">>>>>>>>>>> Entrando a get_game_info con match_number: {match_number}")
     conn = sqlite3.connect('game.db')
     c = conn.cursor()
     c.execute('SELECT * FROM game_info WHERE match_number = ?', (match_number,))
@@ -36,10 +41,11 @@ def get_game_info(match_number):
             "matchDate": game_info[6]
         })
     else:
-        return jsonify({"error": "No game info found for match number"}), 404
+        return jsonify({"error": "No se encontró información del juego para el número de partido"}), 404
 
 @app.route('/game-info', methods=['POST'])
 def update_game_info():
+    logger.info(">>>>>>>>>>> Entering update_game_info")
     data = request.get_json()
     conn = sqlite3.connect('game.db')
     c = conn.cursor()
@@ -55,10 +61,11 @@ def update_game_info():
               (data['matchNumber'], data['player1']['name'], data['player1']['points'], data['player2']['name'], data['player2']['points'], data['playing'], data['matchDate']))
     conn.commit()
     conn.close()
-    return jsonify({"message": "Game info updated successfully"}), 201
+    return jsonify({"message": "Información del juego actualizada exitosamente"}), 201
 
 @app.route('/game-ids', methods=['GET'])
 def get_game_ids():
+    logger.info(">>>>>>>>>>> Entrando a get_game_ids")
     conn = sqlite3.connect('game.db')
     c = conn.cursor()
     c.execute('SELECT match_number FROM game_info')
